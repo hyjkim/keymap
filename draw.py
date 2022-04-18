@@ -59,6 +59,8 @@ class Keymap:
         self.layers = layers
 
         assert self.split
+        if thumbs is not None:
+            assert self.thumbs <= self.columns
 
         self.hand_w = self.columns * KEYSPACE_W
         self.hand_h = (self.rows + (1 if self.thumbs else 0)) * KEYSPACE_H
@@ -83,12 +85,14 @@ class Keymap:
             )
             y += LINE_SPACING
 
-    def print_row(self, x, y, row):
+    def print_row(self, x, y, row, thumbs=False):
+        assert len(row) == (self.columns if not thumbs else self.thumbs)
         for key in row:
             self.print_key(x, y, key)
             x += KEYSPACE_W
 
     def print_block(self, x, y, block):
+        assert len(block) == self.rows
         for row in block:
             self.print_row(x, y, row)
             y += KEYSPACE_H
@@ -101,14 +105,16 @@ class Keymap:
             layer["right"],
         )
         self.print_row(
-            x + 3 * KEYSPACE_W,
-            y + 3 * KEYSPACE_H,
-            layer["thumbs"]["left"],
+            x + (self.columns - self.thumbs) * KEYSPACE_W,
+            y + self.rows * KEYSPACE_H,
+            layer["left-thumbs"],
+            thumbs=True
         )
         self.print_row(
             x + self.hand_w + OUTER_PAD_W,
-            y + 3 * KEYSPACE_H,
-            layer["thumbs"]["right"],
+            y + self.rows * KEYSPACE_H,
+            layer["right-thumbs"],
+            thumbs=True
         )
 
     def print_board(self):
