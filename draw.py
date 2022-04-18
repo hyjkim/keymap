@@ -15,6 +15,8 @@ INNER_PAD_W = 2
 INNER_PAD_H = 2
 OUTER_PAD_W = KEY_W / 2
 OUTER_PAD_H = KEY_H / 2
+KEYSPACE_W = KEY_W + 2 * INNER_PAD_W
+KEYSPACE_H = KEY_H + 2 * INNER_PAD_H
 LINE_SPACING = 18
 
 STYLE = """
@@ -34,16 +36,6 @@ STYLE = """
         fill: #fdd;
     }
 """
-
-
-KEYSPACE_W = KEY_W + 2 * INNER_PAD_W
-KEYSPACE_H = KEY_H + 2 * INNER_PAD_H
-HAND_W = 5 * KEYSPACE_W
-HAND_H = 4 * KEYSPACE_H
-LAYER_W = 2 * HAND_W + OUTER_PAD_W
-LAYER_H = HAND_H
-BOARD_W = LAYER_W + 2 * OUTER_PAD_W
-BOARD_H = 4 * LAYER_H + 5 * OUTER_PAD_H
 
 
 class KeyType(Enum):
@@ -67,6 +59,13 @@ class Keymap:
         self.layers = layers
 
         assert self.split
+
+        self.hand_w = self.columns * KEYSPACE_W
+        self.hand_h = (self.rows + (1 if self.thumbs else 0)) * KEYSPACE_H
+        self.layer_w = 2 * self.hand_w + OUTER_PAD_W
+        self.layer_h = self.hand_h
+        self.board_w = self.layer_w + 2 * OUTER_PAD_W
+        self.board_h = len(layers) * self.layer_h + (len(layers) + 1) * OUTER_PAD_H
 
     def print_key(self, x, y, key):
         key_class = ""
@@ -97,7 +96,7 @@ class Keymap:
     def print_layer(self, x, y, name, layer):
         self.print_block(x, y, layer["left"])
         self.print_block(
-            x + HAND_W + OUTER_PAD_W,
+            x + self.hand_w + OUTER_PAD_W,
             y,
             layer["right"],
         )
@@ -107,31 +106,30 @@ class Keymap:
             layer["thumbs"]["left"],
         )
         self.print_row(
-            x + HAND_W + OUTER_PAD_W,
+            x + self.hand_w + OUTER_PAD_W,
             y + 3 * KEYSPACE_H,
             layer["thumbs"]["right"],
         )
 
-    def print_board(self, x, y):
-        x += OUTER_PAD_W
+    def print_board(self):
+        print(
+            f'<svg width="{self.board_w}" height="{self.board_h}" viewBox="0 0 {self.board_w} {self.board_h}" xmlns="http://www.w3.org/2000/svg">'
+        )
+        print(f"<style>{STYLE}</style>")
+
+        x, y = OUTER_PAD_W, 0
         for name, layer in self.layers.items():
             y += OUTER_PAD_H
             self.print_layer(x, y, name, layer)
-            y += LAYER_H
+            y += self.layer_h
+
+        print("</svg>")
 
 
 def main():
-    print(
-        f'<svg width="{BOARD_W}" height="{BOARD_H}" viewBox="0 0 {BOARD_W} {BOARD_H}" xmlns="http://www.w3.org/2000/svg">'
-    )
-    print(f"<style>{STYLE}</style>")
-    # print_board(0, 0, KEYMAP)
-    print("</svg>")
-
     data = yaml.safe_load(open(sys.argv[1]))
     km = Keymap(**data['layout'], layers=data['layers'])
-    km.print_board(0, 0)
-    k = Key("h")
+    km.print_board()
 
 
 if __name__ == "__main__":
