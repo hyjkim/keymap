@@ -3,7 +3,7 @@
 import sys
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Sequence, Mapping, Union
+from typing import Optional, Sequence, Mapping, Union, TypedDict
 
 import yaml
 
@@ -39,7 +39,18 @@ STYLE = """
 """
 
 KeySpec = Union[str, Mapping[str, str]]
-Layer = Mapping[str, Sequence[Union[KeySpec, Sequence[KeySpec]]]]
+ComboSpec = TypedDict("ComboSpec", {"positions": Sequence[int], "key": KeySpec})
+KeyRow = Sequence[KeySpec]
+KeyBlock = Sequence[KeyRow]
+
+
+Layer = TypedDict("Layer", {
+    "left": KeyBlock,
+    "right": KeyBlock,
+    "left-thumbs": KeyRow,
+    "right-thumbs": KeyRow,
+    "combos": Sequence[ComboSpec],
+})
 
 
 class KeyType(Enum):
@@ -73,15 +84,18 @@ class Keymap:
         self.board_w = self.layer_w + 2 * OUTER_PAD_W
         self.board_h = len(layers) * self.layer_h + (len(layers) + 1) * OUTER_PAD_H
 
-    def print_key(self, x: float, y: float, key):
-        key_class = ""
-        if isinstance(key, dict):
-            key_class = key.get("type", "")
-            key = key["key"]
+    @staticmethod
+    def print_key(x: float, y: float, key_spec: KeySpec):
+        if isinstance(key_spec, str):
+            key_class = ""
+            keystr = key_spec
+        else:
+            key_class = key_spec.get("type", "")
+            keystr = key_spec["key"]
         print(
             f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x + INNER_PAD_W}" y="{y + INNER_PAD_H}" width="{KEY_W}" height="{KEY_H}" class="{key_class}" />'
         )
-        words = key.split()
+        words = keystr.split()
         y += (KEYSPACE_H - (len(words) - 1) * LINE_SPACING) / 2
         for word in words:
             print(
@@ -89,37 +103,32 @@ class Keymap:
             )
             y += LINE_SPACING
 
-    def print_row(self, x: float, y: float, row: Sequence[KeySpec], is_thumbs: bool = False):
+    def print_row(self, x: float, y: float, row: KeyRow, is_thumbs: bool = False):
         assert len(row) == (self.columns if not is_thumbs else self.thumbs)
         for key_spec in row:
-            key = Key(**key_spec) if isinstance(key_spec, dict) else Key(key_spec)
-            self.print_key(x, y, key)
+            self.print_key(x, y, key_spec)
             x += KEYSPACE_W
 
-    def print_block(self, x, y, block: Sequence[Sequence[KeySpec]]):
+    def print_block(self, x, y, block: KeyBlock):
         assert len(block) == self.rows
         for row in block:
             self.print_row(x, y, row)
             y += KEYSPACE_H
 
     def print_layer(self, x: float, y: float, name: str, layer: Layer):
-        assert isinstance(layer["left"], Sequence[Sequence[KeySpec]])
         self.print_block(x, y, layer["left"])
-        assert isinstance(layer["right"], Sequence[Sequence[KeySpec]])
         self.print_block(
             x + self.hand_w + OUTER_PAD_W,
             y,
             layer["right"],
         )
         if self.thumbs:
-            assert isinstance(layer["left-thumbs"], Sequence[KeySpec])
             self.print_row(
                 x + (self.columns - self.thumbs) * KEYSPACE_W,
                 y + self.rows * KEYSPACE_H,
                 layer["left-thumbs"],
                 is_thumbs=True
             )
-            assert isinstance(layer["right-thumbs"], Sequence[KeySpec])
             self.print_row(
                 x + self.hand_w + OUTER_PAD_W,
                 y + self.rows * KEYSPACE_H,
