@@ -2,7 +2,6 @@
 
 import sys
 from xml.sax.saxutils import escape
-from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Sequence, Mapping, Union, TypedDict
 
@@ -39,31 +38,28 @@ STYLE = """
     }
 """
 
-KeySpec = Union[str, Mapping[str, str]]
-ComboSpec = TypedDict("ComboSpec", {"positions": Sequence[int], "key": KeySpec})
-KeyRow = Sequence[KeySpec]
-KeyBlock = Sequence[KeyRow]
-
-
-Layer = TypedDict("Layer", {
-    "left": KeyBlock,
-    "right": KeyBlock,
-    "left-thumbs": KeyRow,
-    "right-thumbs": KeyRow,
-    "combos": Sequence[ComboSpec],
-})
-
-
 class KeyType(Enum):
     NORMAL = ""
     HELD = "held"
 
 
-@dataclass
-class Key:
+class Key(TypedDict):
     tap: str
     hold: Optional[str] = None
     type: KeyType = KeyType.NORMAL
+
+
+KeySpec = Union[str, Key]
+Combo = TypedDict("ComboSpec", {"positions": Sequence[int], "key": KeySpec})
+KeyRow = Sequence[KeySpec]
+KeyBlock = Sequence[KeyRow]
+Layer = TypedDict("Layer", {
+    "left": KeyBlock,
+    "right": KeyBlock,
+    "left-thumbs": KeyRow,
+    "right-thumbs": KeyRow,
+    "combos": Sequence[Combo],
+})
 
 
 class Keymap:
@@ -88,9 +84,33 @@ class Keymap:
     @staticmethod
     def print_key(x: float, y: float, key_spec: KeySpec):
         if isinstance(key_spec, str):
-            key = Key(key_spec)
+            key = {"tap": key_spec}
         else:
-            key = Key(**key_spec)
+            key = key_spec
+        kc = key.get("type", "")
+        tap_words = key["tap"].split()
+        hold = key.get("hold")
+        print(
+            f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x + INNER_PAD_W}" y="{y + INNER_PAD_H}" width="{KEY_W}" height="{KEY_H}" class="{kc}" />'
+        )
+        y_tap = y + (KEYSPACE_H - (len(tap_words) - 1) * LINE_SPACING) / 2
+        for word in tap_words:
+            print(
+                f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y_tap}">{escape(word)}</text>'
+            )
+            y_tap += LINE_SPACING
+        if hold:
+            y_hold = y + KEYSPACE_H - LINE_SPACING / 2 
+            print(
+                f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y_hold}" font-size="80%">{escape(hold)}</text>'
+            )
+
+    @staticmethod
+    def print_combo(combo_spec: Combo):
+        if isinstance(combo_spec, str):
+            key = Key(combo_spec)
+        else:
+            key = Key(**combo_spec)
         print(
             f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x + INNER_PAD_W}" y="{y + INNER_PAD_H}" width="{KEY_W}" height="{KEY_H}" class="{key.type}" />'
         )
@@ -106,7 +126,6 @@ class Keymap:
             print(
                 f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y_hold}" font-size="80%">{escape(key.hold)}</text>'
             )
-
 
     def print_row(self, x: float, y: float, row: KeyRow, is_thumbs: bool = False):
         assert len(row) == (self.columns if not is_thumbs else self.thumbs)
