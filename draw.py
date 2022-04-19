@@ -16,7 +16,7 @@ KEY_RY = 6
 INNER_PAD_W = 2
 INNER_PAD_H = 2
 OUTER_PAD_W = KEY_W / 2
-OUTER_PAD_H = KEY_H / 2
+OUTER_PAD_H = KEY_H
 KEYSPACE_W = KEY_W + 2 * INNER_PAD_W
 KEYSPACE_H = KEY_H + 2 * INNER_PAD_H
 LINE_SPACING = 18
@@ -117,6 +117,9 @@ class Keymap:
             y += KEYSPACE_H
 
     def print_layer(self, x: float, y: float, name: str, layer: Layer):
+        print(
+            f'<text text-anchor="left" dominant-baseline="middle" x="{KEY_W / 2}" y="{y - KEY_H / 2}">{escape(name)}:</text>'
+        )
         self.print_block(x, y, layer["left"])
         self.print_block(
             x + self.hand_w + OUTER_PAD_W,
