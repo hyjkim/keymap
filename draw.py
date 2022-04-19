@@ -94,13 +94,19 @@ class Keymap:
         print(
             f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x + INNER_PAD_W}" y="{y + INNER_PAD_H}" width="{KEY_W}" height="{KEY_H}" class="{key.type}" />'
         )
-        words = key.tap.split()
-        y += (KEYSPACE_H - (len(words) - 1) * LINE_SPACING) / 2
-        for word in words:
+        tap_words = key.tap.split()
+        y_tap = y + (KEYSPACE_H - (len(tap_words) - 1) * LINE_SPACING) / 2
+        for word in tap_words:
             print(
-                f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y}">{escape(word)}</text>'
+                f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y_tap}">{escape(word)}</text>'
             )
-            y += LINE_SPACING
+            y_tap += LINE_SPACING
+        if key.hold:
+            y_hold = y + KEYSPACE_H - LINE_SPACING / 2 
+            print(
+                f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y_hold}" font-size="80%">{escape(key.hold)}</text>'
+            )
+
 
     def print_row(self, x: float, y: float, row: KeyRow, is_thumbs: bool = False):
         assert len(row) == (self.columns if not is_thumbs else self.thumbs)
