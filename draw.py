@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-import yaml
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, Sequence, Mapping, Union
+
+import yaml
 
 
 KEY_W = 55
@@ -37,6 +38,9 @@ STYLE = """
     }
 """
 
+KeySpec = Union[str, Mapping[str, str]]
+Layer = Mapping[str, Sequence[Union[KeySpec, Sequence[KeySpec]]]]
+
 
 class KeyType(Enum):
     NORMAL = ""
@@ -51,7 +55,7 @@ class Key:
 
 
 class Keymap:
-    def __init__(self, split, rows, columns, thumbs, layers):
+    def __init__(self, split: bool, rows: int, columns: int, thumbs: Optional[int], layers: Mapping[str, Layer]):
         self.split = split
         self.rows = rows
         self.columns = columns
@@ -59,7 +63,7 @@ class Keymap:
         self.layers = layers
 
         assert self.split
-        if thumbs is not None:
+        if self.thumbs is not None:
             assert self.thumbs <= self.columns
 
         self.hand_w = self.columns * KEYSPACE_W
@@ -69,7 +73,7 @@ class Keymap:
         self.board_w = self.layer_w + 2 * OUTER_PAD_W
         self.board_h = len(layers) * self.layer_h + (len(layers) + 1) * OUTER_PAD_H
 
-    def print_key(self, x, y, key):
+    def print_key(self, x: float, y: float, key):
         key_class = ""
         if isinstance(key, dict):
             key_class = key.get("type", "")
@@ -85,37 +89,43 @@ class Keymap:
             )
             y += LINE_SPACING
 
-    def print_row(self, x, y, row, thumbs=False):
-        assert len(row) == (self.columns if not thumbs else self.thumbs)
-        for key in row:
+    def print_row(self, x: float, y: float, row: Sequence[KeySpec], is_thumbs: bool = False):
+        assert len(row) == (self.columns if not is_thumbs else self.thumbs)
+        for key_spec in row:
+            key = Key(**key_spec) if isinstance(key_spec, dict) else Key(key_spec)
             self.print_key(x, y, key)
             x += KEYSPACE_W
 
-    def print_block(self, x, y, block):
+    def print_block(self, x, y, block: Sequence[Sequence[KeySpec]]):
         assert len(block) == self.rows
         for row in block:
             self.print_row(x, y, row)
             y += KEYSPACE_H
 
-    def print_layer(self, x, y, name, layer):
+    def print_layer(self, x: float, y: float, name: str, layer: Layer):
+        assert isinstance(layer["left"], Sequence[Sequence[KeySpec]])
         self.print_block(x, y, layer["left"])
+        assert isinstance(layer["right"], Sequence[Sequence[KeySpec]])
         self.print_block(
             x + self.hand_w + OUTER_PAD_W,
             y,
             layer["right"],
         )
-        self.print_row(
-            x + (self.columns - self.thumbs) * KEYSPACE_W,
-            y + self.rows * KEYSPACE_H,
-            layer["left-thumbs"],
-            thumbs=True
-        )
-        self.print_row(
-            x + self.hand_w + OUTER_PAD_W,
-            y + self.rows * KEYSPACE_H,
-            layer["right-thumbs"],
-            thumbs=True
-        )
+        if self.thumbs:
+            assert isinstance(layer["left-thumbs"], Sequence[KeySpec])
+            self.print_row(
+                x + (self.columns - self.thumbs) * KEYSPACE_W,
+                y + self.rows * KEYSPACE_H,
+                layer["left-thumbs"],
+                is_thumbs=True
+            )
+            assert isinstance(layer["right-thumbs"], Sequence[KeySpec])
+            self.print_row(
+                x + self.hand_w + OUTER_PAD_W,
+                y + self.rows * KEYSPACE_H,
+                layer["right-thumbs"],
+                is_thumbs=True
+            )
 
     def print_board(self):
         print(
@@ -133,7 +143,8 @@ class Keymap:
 
 
 def main():
-    data = yaml.safe_load(open(sys.argv[1]))
+    with open(sys.argv[1], 'rb') as f:
+        data = yaml.safe_load(f)
     km = Keymap(**data['layout'], layers=data['layers'])
     km.print_board()
 
