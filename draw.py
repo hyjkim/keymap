@@ -88,15 +88,13 @@ class Keymap:
     @staticmethod
     def print_key(x: float, y: float, key_spec: KeySpec):
         if isinstance(key_spec, str):
-            key_class = ""
-            keystr = key_spec
+            key = Key(key_spec)
         else:
-            key_class = key_spec.get("type", "")
-            keystr = key_spec["tap"]
+            key = Key(**key_spec)
         print(
-            f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x + INNER_PAD_W}" y="{y + INNER_PAD_H}" width="{KEY_W}" height="{KEY_H}" class="{key_class}" />'
+            f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x + INNER_PAD_W}" y="{y + INNER_PAD_H}" width="{KEY_W}" height="{KEY_H}" class="{key.type}" />'
         )
-        words = keystr.split()
+        words = key.tap.split()
         y += (KEYSPACE_H - (len(words) - 1) * LINE_SPACING) / 2
         for word in words:
             print(
