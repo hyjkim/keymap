@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+from xml.sax.saxutils import escape
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Sequence, Mapping, Union, TypedDict
@@ -91,7 +92,7 @@ class Keymap:
             keystr = key_spec
         else:
             key_class = key_spec.get("type", "")
-            keystr = key_spec["key"]
+            keystr = key_spec["tap"]
         print(
             f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x + INNER_PAD_W}" y="{y + INNER_PAD_H}" width="{KEY_W}" height="{KEY_H}" class="{key_class}" />'
         )
@@ -99,7 +100,7 @@ class Keymap:
         y += (KEYSPACE_H - (len(words) - 1) * LINE_SPACING) / 2
         for word in words:
             print(
-                f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y}">{word}</text>'
+                f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y}">{escape(word)}</text>'
             )
             y += LINE_SPACING
 
