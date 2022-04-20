@@ -3,7 +3,7 @@
 import sys
 from xml.sax.saxutils import escape
 from enum import Enum
-from typing import Optional, Sequence, Mapping, Union, TypedDict
+from typing import Optional, Tuple, Sequence, Mapping, Union, TypedDict
 
 import yaml
 
@@ -36,21 +36,27 @@ STYLE = """
     .held {
         fill: #fdd;
     }
+
+    .combo {
+        fill: #ddf;
+    }
 """
+
 
 class KeyType(Enum):
     NORMAL = ""
     HELD = "held"
+    COMBO = "combo"
 
 
 class Key(TypedDict):
     tap: str
-    hold: Optional[str] = None
-    type: KeyType = KeyType.NORMAL
+    hold: Optional[str]
+    type: KeyType
 
 
 KeySpec = Union[str, Key]
-Combo = TypedDict("ComboSpec", {"positions": Sequence[int], "key": KeySpec})
+ComboSpec = TypedDict("ComboSpec", {"positions": Sequence[int], "key": KeySpec})
 KeyRow = Sequence[KeySpec]
 KeyBlock = Sequence[KeyRow]
 Layer = TypedDict("Layer", {
@@ -58,7 +64,7 @@ Layer = TypedDict("Layer", {
     "right": KeyBlock,
     "left-thumbs": KeyRow,
     "right-thumbs": KeyRow,
-    "combos": Sequence[Combo],
+    "combos": Sequence[ComboSpec],
 })
 
 
@@ -74,22 +80,24 @@ class Keymap:
         if self.thumbs is not None:
             assert self.thumbs <= self.columns
 
-        self.hand_w = self.columns * KEYSPACE_W
-        self.hand_h = (self.rows + (1 if self.thumbs else 0)) * KEYSPACE_H
-        self.layer_w = 2 * self.hand_w + OUTER_PAD_W
-        self.layer_h = self.hand_h
+        self.block_w = self.columns * KEYSPACE_W
+        self.block_h = (self.rows + (1 if self.thumbs else 0)) * KEYSPACE_H
+        self.layer_w = 2 * self.block_w + OUTER_PAD_W
+        self.layer_h = self.block_h
         self.board_w = self.layer_w + 2 * OUTER_PAD_W
         self.board_h = len(layers) * self.layer_h + (len(layers) + 1) * OUTER_PAD_H
 
     @staticmethod
-    def print_key(x: float, y: float, key_spec: KeySpec):
+    def _keyspec_to_props(key_spec: KeySpec) -> Tuple[str, Optional[str], Optional[str]]:
         if isinstance(key_spec, str):
             key = {"tap": key_spec}
         else:
-            key = key_spec
-        kc = key.get("type", "")
-        tap_words = key["tap"].split()
-        hold = key.get("hold")
+            key = Key(key_spec)
+        return key["tap"], key.get("hold"), key.get("type", KeyType.NORMAL.value)
+
+    def print_key(self, x: float, y: float, key_spec: KeySpec):
+        tap, hold, kc = self._keyspec_to_props(key_spec)
+        tap_words = tap.split()
         print(
             f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x + INNER_PAD_W}" y="{y + INNER_PAD_H}" width="{KEY_W}" height="{KEY_H}" class="{kc}" />'
         )
@@ -100,32 +108,30 @@ class Keymap:
             )
             y_tap += LINE_SPACING
         if hold:
-            y_hold = y + KEYSPACE_H - LINE_SPACING / 2 
+            y_hold = y + KEYSPACE_H - LINE_SPACING / 2
             print(
                 f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y_hold}" font-size="80%">{escape(hold)}</text>'
             )
 
-    @staticmethod
-    def print_combo(combo_spec: Combo):
-        if isinstance(combo_spec, str):
-            key = Key(combo_spec)
-        else:
-            key = Key(**combo_spec)
+    def print_combo(self, x: float, y: float, combo_spec: ComboSpec):
+        pos_idx = combo_spec['positions']
+
+        # no combos with > 2 positions or in thumb keys
+        assert len(pos_idx) == 2 and all(pos < self.rows * self.columns * (2 if self.split else 1) for pos in pos_idx)
+        cols = [p % ((2 if self.split else 1) * self.columns) for p in pos_idx]
+        rows = [p // ((2 if self.split else 1) * self.columns) for p in pos_idx]
+        x_pos = [x + c * KEYSPACE_W + (OUTER_PAD_W if self.split and c >= self.columns else 0) for c in cols]
+        y_pos = [y + r * KEYSPACE_H for r in rows]
+        tap, _, _ = self._keyspec_to_props(combo_spec['key'])
+
+        x_mid, y_mid = sum(x_pos) / len(pos_idx), sum(y_pos) / len(pos_idx)
+
         print(
-            f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x + INNER_PAD_W}" y="{y + INNER_PAD_H}" width="{KEY_W}" height="{KEY_H}" class="{key.type}" />'
+            f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x_mid + INNER_PAD_W + KEY_W / 4}" y="{y_mid + INNER_PAD_H + KEY_H / 4}" width="{KEY_W / 2}" height="{KEY_H / 2}" class="{KeyType.COMBO.value}" />'
         )
-        tap_words = key.tap.split()
-        y_tap = y + (KEYSPACE_H - (len(tap_words) - 1) * LINE_SPACING) / 2
-        for word in tap_words:
-            print(
-                f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y_tap}">{escape(word)}</text>'
-            )
-            y_tap += LINE_SPACING
-        if key.hold:
-            y_hold = y + KEYSPACE_H - LINE_SPACING / 2 
-            print(
-                f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y_hold}" font-size="80%">{escape(key.hold)}</text>'
-            )
+        print(
+            f'<text text-anchor="middle" dominant-baseline="middle" x="{x_mid + KEYSPACE_W / 2}" y="{y_mid + INNER_PAD_H + KEY_H / 2}" font-size="80%">{escape(tap)}</text>'
+        )
 
     def print_row(self, x: float, y: float, row: KeyRow, is_thumbs: bool = False):
         assert len(row) == (self.columns if not is_thumbs else self.thumbs)
@@ -133,7 +139,7 @@ class Keymap:
             self.print_key(x, y, key_spec)
             x += KEYSPACE_W
 
-    def print_block(self, x, y, block: KeyBlock):
+    def print_block(self, x: float, y: float, block: KeyBlock):
         assert len(block) == self.rows
         for row in block:
             self.print_row(x, y, row)
@@ -145,7 +151,7 @@ class Keymap:
         )
         self.print_block(x, y, layer["left"])
         self.print_block(
-            x + self.hand_w + OUTER_PAD_W,
+            x + self.block_w + OUTER_PAD_W,
             y,
             layer["right"],
         )
@@ -157,11 +163,14 @@ class Keymap:
                 is_thumbs=True
             )
             self.print_row(
-                x + self.hand_w + OUTER_PAD_W,
+                x + self.block_w + OUTER_PAD_W,
                 y + self.rows * KEYSPACE_H,
                 layer["right-thumbs"],
                 is_thumbs=True
             )
+        if "combos" in layer:
+            for combo_spec in layer["combos"]:
+                self.print_combo(x, y, combo_spec)
 
     def print_board(self):
         print(
