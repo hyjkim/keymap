@@ -59,13 +59,16 @@ KeySpec = Union[str, Key]
 ComboSpec = TypedDict("ComboSpec", {"positions": Sequence[int], "key": KeySpec})
 KeyRow = Sequence[KeySpec]
 KeyBlock = Sequence[KeyRow]
-Layer = TypedDict("Layer", {
-    "left": KeyBlock,
-    "right": KeyBlock,
-    "left-thumbs": KeyRow,
-    "right-thumbs": KeyRow,
-    "combos": Sequence[ComboSpec],
-})
+Layer = TypedDict(
+    "Layer",
+    {
+        "left": KeyBlock,
+        "right": KeyBlock,
+        "left-thumbs": KeyRow,
+        "right-thumbs": KeyRow,
+        "combos": Sequence[ComboSpec],
+    },
+)
 
 
 class Keymap:
@@ -88,6 +91,17 @@ class Keymap:
         self.board_h = len(layers) * self.layer_h + (len(layers) + 1) * OUTER_PAD_H
 
     @staticmethod
+    def _draw_rect(x: float, y: float, w: float, h: float, cls: str):
+        print(f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x}" y="{y}" ' f'width="{w}" height="{h}" class="{cls}" />')
+
+    @staticmethod
+    def _draw_text(x: float, y: float, text: str, small=False):
+        print(f'<text text-anchor="middle" dominant-baseline="middle" x="{x}" y="{y}"')
+        if small:
+            print(' font-size="80%"')
+        print(f'>{escape(text)}</text>')
+
+    @staticmethod
     def _keyspec_to_props(key_spec: KeySpec) -> Tuple[str, Optional[str], Optional[str]]:
         if isinstance(key_spec, str):
             key = {"tap": key_spec}
@@ -98,40 +112,34 @@ class Keymap:
     def print_key(self, x: float, y: float, key_spec: KeySpec):
         tap, hold, kc = self._keyspec_to_props(key_spec)
         tap_words = tap.split()
-        print(
-            f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x + INNER_PAD_W}" y="{y + INNER_PAD_H}" width="{KEY_W}" height="{KEY_H}" class="{kc}" />'
-        )
+        self._draw_rect(x + INNER_PAD_W, y + INNER_PAD_H, KEY_W, KEY_H, kc)
+
         y_tap = y + (KEYSPACE_H - (len(tap_words) - 1) * LINE_SPACING) / 2
         for word in tap_words:
-            print(
-                f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y_tap}">{escape(word)}</text>'
-            )
+            self._draw_text(x + KEYSPACE_W / 2, y_tap, word)
             y_tap += LINE_SPACING
         if hold:
             y_hold = y + KEYSPACE_H - LINE_SPACING / 2
-            print(
-                f'<text text-anchor="middle" dominant-baseline="middle" x="{x + KEYSPACE_W / 2}" y="{y_hold}" font-size="80%">{escape(hold)}</text>'
-            )
+            self._draw_text(x + KEYSPACE_W / 2, y_hold, hold, small=True)
 
     def print_combo(self, x: float, y: float, combo_spec: ComboSpec):
-        pos_idx = combo_spec['positions']
+        pos_idx = combo_spec["positions"]
 
         # no combos with > 2 positions or in thumb keys
-        assert len(pos_idx) == 2 and all(pos < self.rows * self.columns * (2 if self.split else 1) for pos in pos_idx)
+        assert (len(pos_idx) == 2 and
+                all(pos < self.rows * self.columns * (2 if self.split else 1) for pos in pos_idx))
         cols = [p % ((2 if self.split else 1) * self.columns) for p in pos_idx]
         rows = [p // ((2 if self.split else 1) * self.columns) for p in pos_idx]
         x_pos = [x + c * KEYSPACE_W + (OUTER_PAD_W if self.split and c >= self.columns else 0) for c in cols]
         y_pos = [y + r * KEYSPACE_H for r in rows]
-        tap, _, _ = self._keyspec_to_props(combo_spec['key'])
+        tap, _, _ = self._keyspec_to_props(combo_spec["key"])
 
         x_mid, y_mid = sum(x_pos) / len(pos_idx), sum(y_pos) / len(pos_idx)
 
-        print(
-            f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x_mid + INNER_PAD_W + KEY_W / 4}" y="{y_mid + INNER_PAD_H + KEY_H / 4}" width="{KEY_W / 2}" height="{KEY_H / 2}" class="{KeyType.COMBO.value}" />'
+        self._draw_rect(
+            x_mid + INNER_PAD_W + KEY_W / 4, y_mid + INNER_PAD_H + KEY_H / 4, KEY_W / 2, KEY_H / 2, KeyType.COMBO.value
         )
-        print(
-            f'<text text-anchor="middle" dominant-baseline="middle" x="{x_mid + KEYSPACE_W / 2}" y="{y_mid + INNER_PAD_H + KEY_H / 2}" font-size="80%">{escape(tap)}</text>'
-        )
+        self._draw_text(x_mid + KEYSPACE_W / 2, y_mid + INNER_PAD_H + KEY_H / 2, tap, small=True)
 
     def print_row(self, x: float, y: float, row: KeyRow, is_thumbs: bool = False):
         assert len(row) == (self.columns if not is_thumbs else self.thumbs)
@@ -160,13 +168,10 @@ class Keymap:
                 x + (self.columns - self.thumbs) * KEYSPACE_W,
                 y + self.rows * KEYSPACE_H,
                 layer["left-thumbs"],
-                is_thumbs=True
+                is_thumbs=True,
             )
             self.print_row(
-                x + self.block_w + OUTER_PAD_W,
-                y + self.rows * KEYSPACE_H,
-                layer["right-thumbs"],
-                is_thumbs=True
+                x + self.block_w + OUTER_PAD_W, y + self.rows * KEYSPACE_H, layer["right-thumbs"], is_thumbs=True
             )
         if "combos" in layer:
             for combo_spec in layer["combos"]:
@@ -188,9 +193,9 @@ class Keymap:
 
 
 def main():
-    with open(sys.argv[1], 'rb') as f:
+    with open(sys.argv[1], "rb") as f:
         data = yaml.safe_load(f)
-    km = Keymap(**data['layout'], layers=data['layers'])
+    km = Keymap(**data["layout"], layers=data["layers"])
     km.print_board()
 
 
