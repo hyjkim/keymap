@@ -1,6 +1,7 @@
 # Keymap Visualizer
 
 This is a visualizer for keymaps, similar to [`keymap`](https://github.com/callum-oakley/keymap) that it is forked from.
+Requires `python >= 3.8` and `pyyaml` package (`pip install --user pyyaml`).
 
 ## Differences from original
 - Supports custom-sized layouts

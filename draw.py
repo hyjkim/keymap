@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from xml.sax.saxutils import escape
+from html import escape
 from enum import Enum
 from typing import Optional, Tuple, Sequence, Mapping, Union, TypedDict
 
