@@ -8,8 +8,8 @@ This is a visualizer for keymaps, similar to [`keymap`](https://github.com/callu
 - Reads physical layout and keymap definitions from yaml files
 - Supports hold-tap keys
 - Supports combos
-    - Only two non-thumb neighboring positions, for now
-    - Uses ZMK-like position indices (starting from 0, increasing row-by-row
+    - Only two neighboring non-thumb positions, for now
+    - Uses ZMK-like position indices (starting from 0, going right then down)
 - Layer labels
 - Slightly different styling
 
