@@ -97,10 +97,12 @@ class Keymap:
         print(f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x}" y="{y}" ' f'width="{w}" height="{h}" class="{cls}" />')
 
     @staticmethod
-    def _draw_text(x: float, y: float, text: str, small=False):
+    def _draw_text(x: float, y: float, text: str, small=False, bold=False):
         print(f'<text text-anchor="middle" dominant-baseline="middle" x="{x}" y="{y}"')
         if small:
             print(' font-size="80%"')
+        if bold:
+            print(' font-weight="bold"')
         print(f'>{escape(text)}</text>')
 
     @staticmethod
@@ -156,9 +158,7 @@ class Keymap:
             y += KEYSPACE_H
 
     def print_layer(self, x: float, y: float, name: str, layer: Layer):
-        print(
-            f'<text text-anchor="left" dominant-baseline="middle" x="{KEY_W / 2}" y="{y - KEY_H / 2}">{escape(name)}:</text>'
-        )
+        self._draw_text(KEY_W / 2, y - KEY_H / 2, f"{name}:", bold=True)
         self.print_block(x, y, layer["left"])
         self.print_block(
             x + self.block_w + OUTER_PAD_W,
