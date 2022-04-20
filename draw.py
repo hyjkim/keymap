@@ -9,7 +9,7 @@ import yaml
 
 
 KEY_W = 55
-KEY_H = 45
+KEY_H = 50
 KEY_RX = 6
 KEY_RY = 6
 INNER_PAD_W = 2
@@ -31,6 +31,8 @@ STYLE = """
 
     rect {
         fill: #f6f8fa;
+        stroke: #d6d8da;
+        stroke-width: 1;
     }
 
     .held {
@@ -38,7 +40,7 @@ STYLE = """
     }
 
     .combo {
-        fill: #ddf;
+        fill: #cdf;
     }
 """
 
