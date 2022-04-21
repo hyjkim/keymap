@@ -17,6 +17,6 @@ Requires `python >= 3.8` and `pyyaml` package (`pip install --user pyyaml`).
 For expected input schema, please see examples in [keymaps](keymaps/) folder.
 
 ## Example layout
-Below is an example layout generated with `python draw.py keymaps/3x5+2.formal.yaml >keymap.svg`:
+Below is an example layout generated with `python draw.py keymaps/3x5+2.yaml >keymap.svg`:
 
-![3x5+2 "formal" layout](svg/3x5+2.formal.svg)
+![Example 3x5+2 layout](svg/3x5+2.svg)
