@@ -75,7 +75,7 @@ layers:
             - ["0", "4", "5", "6", "."]
             - [";", "1", "2", "3", "/"]
         left-thumbs:
-            - Ctrl
+            - Space
             - FUN
         right-thumbs:
             - {tap: "", type: held}
