@@ -86,11 +86,11 @@ class Keymap:
 
     @staticmethod
     def _draw_text(x: float, y: float, text: str, small: bool = False, bold: bool = False) -> None:
-        print(f'<text text-anchor="middle" dominant-baseline="middle" x="{x}" y="{y}"')
+        print(f'<text text-anchor="middle" dominant-baseline="middle" x="{x}" y="{y}"', end='')
         if small:
-            print(' font-size="80%"')
+            print(' font-size="80%"', end='')
         if bold:
-            print(' font-weight="bold"')
+            print(' font-weight="bold"', end='')
         print(f'>{escape(text)}</text>')
 
     @staticmethod
