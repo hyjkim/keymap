@@ -11,7 +11,7 @@ layers:
             - [Z, X, C, V, B]
         right:
             - [Y, U, I, O, P]
-            - [M, {hold: Shift, tap: J}, {hold: Alt, tap: K}, {hold: Gui, tap: L}, {hold: Ctrl, tap: "'"}]
+            - [H, {hold: Shift, tap: J}, {hold: Alt, tap: K}, {hold: Gui, tap: L}, {hold: Ctrl, tap: "'"}]
             - [N, M, ",", ., /]
         left-thumbs: &left-thumbs
             - hold: Ctrl
