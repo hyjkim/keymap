@@ -11,7 +11,7 @@ Requires `python >= 3.8`, `pyyaml` and `pydantic` packages (`pip install --user 
 - Supports horizontal `N`u keys for integer `N > 1`
     - Defined by consecutive identical non-null key definitions
 - Supports combos
-    - Only two neighboring non-thumb positions (horizontal or vertical)
+    - Only two neighboring positions (horizontal or vertical)
     - Uses ZMK-like position indices (starting from 0, going right then down)
 - Layer labels
 - Slightly different styling

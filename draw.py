@@ -119,13 +119,17 @@ class KeymapData(BaseModel):
 
     @root_validator(skip_on_failure=True)
     def check_combo_pos(cls, vals):
-        total = vals["layout"].rows * vals["layout"].columns * (2 if vals["layout"].split else 1)
+        total = vals["layout"].rows * vals["layout"].columns
+        if vals["layout"].thumbs:
+            total += vals["layout"].thumbs
+        if vals["layout"].split:
+            total *= 2
         for layer in vals["layers"].values():
             if layer.combos:
                 for combo in layer.combos:
                     assert len(combo.positions) == 2, "Cannot have more than two positions for combo"
                     assert all(pos < total for pos in combo.positions), \
-                        "Combo positions exceed number of non-thumb keys"
+                        "Combo positions exceed number of keys"
         return vals
 
     @root_validator(skip_on_failure=True)
@@ -155,6 +159,14 @@ class Keymap:
         self.layer_h = self.block_h
         self.board_w = self.layer_w + 2 * OUTER_PAD_W
         self.board_h = len(self.layers) * self.layer_h + (len(self.layers) + 1) * OUTER_PAD_H
+
+    def _pos_to_col(self, pos: int):
+        if pos < self.layout.rows * self.total_cols:
+            return pos % self.total_cols
+        return pos % self.total_cols + (self.layout.columns - self.layout.thumbs)
+
+    def _pos_to_row(self, pos: int):
+        return pos // self.total_cols
 
     @staticmethod
     def _draw_rect(x: float, y: float, w: float, h: float, cls: str) -> None:
@@ -187,8 +199,8 @@ class Keymap:
     def print_combo(self, x: float, y: float, combo_spec: ComboSpec) -> None:
         pos_idx = combo_spec.positions
 
-        cols = [p % self.total_cols for p in pos_idx]
-        rows = [p // self.total_cols for p in pos_idx]
+        cols = [self._pos_to_col(p) for p in pos_idx]
+        rows = [self._pos_to_row(p) for p in pos_idx]
         x_pos = [x + c * KEYSPACE_W + (OUTER_PAD_W if self.layout.split and c >= self.layout.columns else 0) for c in cols]
         y_pos = [y + r * KEYSPACE_H for r in rows]
 
