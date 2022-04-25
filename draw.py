@@ -2,7 +2,7 @@
 
 import sys
 from html import escape
-from itertools import zip_longest, islice, chain
+from itertools import chain
 from typing import Literal, Optional, Sequence, Mapping, Union
 
 import yaml
@@ -170,12 +170,12 @@ class Keymap:
             print(' font-weight="bold"', end='')
         print(f'>{escape(text)}</text>')
 
-    def print_key(self, x: float, y: float, key: Key, double: bool = False) -> None:
+    def print_key(self, x: float, y: float, key: Key, width: int = 1) -> None:
         tap_words = key.tap.split()
-        width = KEY_W if not double else 2 * KEY_W + 2 * INNER_PAD_W
-        self._draw_rect(x + INNER_PAD_W, y + INNER_PAD_H, width, KEY_H, key.type)
+        key_width = (width * KEY_W) + 2 * (width - 1) * INNER_PAD_W
+        self._draw_rect(x + INNER_PAD_W, y + INNER_PAD_H, key_width, KEY_H, key.type)
 
-        x_pos = x + (KEYSPACE_W / 2 if not double else KEYSPACE_W)
+        x_pos = x + INNER_PAD_W + key_width / 2
         y_tap = y + (KEYSPACE_H - (len(tap_words) - 1) * LINE_SPACING) / 2
         for word in tap_words:
             self._draw_text(x_pos, y_tap, word)
@@ -198,17 +198,16 @@ class Keymap:
         self._draw_text(x_mid + KEYSPACE_W / 2, y_mid + INNER_PAD_H + KEY_H / 2, combo_spec.key.tap, small=True)
 
     def print_row(self, x: float, y: float, row: KeyRow) -> None:
-        lookahead_iter = zip_longest(row, islice(row, 1, None))
-        for key, next_key in lookahead_iter:
-            if next_key is not None and key == next_key:
-                self.print_key(x, y, key, double=True)
-                x += 2 * KEYSPACE_W
-                _ = next(lookahead_iter)
-            else:
-                if key is None:
-                    key = Key(tap="")
-                self.print_key(x, y, key)
-                x += KEYSPACE_W
+        prev_key, width = None, 0
+        for i, key in enumerate(chain(row, [None])):
+            if i > 0 and (prev_key is None or key != prev_key or i == len(row)):
+                self.print_key(x, y, prev_key or Key(tap=""), width=width)
+
+                x += width * KEYSPACE_W
+                width = 0
+
+            prev_key = key
+            width += 1
 
     def print_block(self, x: float, y: float, block: KeyBlock) -> None:
         for row in block:

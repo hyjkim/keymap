@@ -8,7 +8,7 @@ Requires `python >= 3.8`, `pyyaml` and `pydantic` packages (`pip install --user 
     - Arbitrary row/col sizes, number of thumb keys for splits
 - Decouples data and drawing logic by reading physical layout and keymap definitions from YAML files
 - Supports hold-tap keys
-- Supports 2u keys
+- Supports horizontal `N`u keys for integer `N > 1`
     - Defined by consecutive identical non-null key definitions
 - Supports combos
     - Only two neighboring non-thumb positions (horizontal or vertical)
