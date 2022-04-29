@@ -78,6 +78,7 @@ class Key(BaseModel):
 class ComboSpec(BaseModel):
     positions: Sequence[int]
     key: Key
+    layers: Optional[Sequence[str]] = None
 
     @validator("key", pre=True)
     def get_key(cls, val):
@@ -145,6 +146,19 @@ class Layout(BaseModel):
 class KeymapData(BaseModel):
     layout: Layout
     layers: Mapping[str, Layer]
+    combos: Optional[Sequence[ComboSpec]] = None
+
+    @root_validator(skip_on_failure=True)
+    def assign_combos_to_layers(cls, vals):
+        if vals["combos"]:
+            for combo in vals["combos"]:
+                layers = combo.layers if combo.layers is not None else vals["layers"]
+                for layer in layers:
+                    if not vals["layers"][layer].combos:
+                        vals["layers"][layer].combos = [combo]
+                    else:
+                        vals["layers"][layer].combos.append(combo)
+        return vals
 
     @root_validator(skip_on_failure=True)
     def validate_split(cls, vals):
