@@ -63,7 +63,7 @@ STYLE = """
 class Key(BaseModel):
     tap: str
     hold: str = ""
-    type: Literal["", "held"] = ""
+    type: Literal[None, "held", "combo"] = None
 
     @classmethod
     def from_key_spec(cls, key_spec: Union[str, "Key"]) -> "Key":
