@@ -43,6 +43,20 @@ STYLE = """
     .combo {
         fill: #cdf;
     }
+
+    text {
+        text-anchor: middle;
+        dominant-baseline: middle;
+    }
+
+    .label {
+        font-weight: bold;
+        text-anchor: start;
+    }
+
+    .small {
+        font-size: 80%;
+    }
 """
 
 
@@ -177,18 +191,14 @@ class Keymap:
         self.board_h = len(self.layers) * self.layer_h + (len(self.layers) + 1) * OUTER_PAD_H
 
     @staticmethod
-    def _draw_rect(x: float, y: float, w: float, h: float, cls: str) -> None:
-        print(f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x}" y="{y}" ' f'width="{w}" height="{h}" class="{cls}" />')
+    def _draw_rect(x: float, y: float, w: float, h: float, cls: Optional[str] = None) -> None:
+        class_str = f' class="{cls}"' if cls is not None else ""
+        print(f'<rect rx="{KEY_RX}" ry="{KEY_RY}" x="{x}" y="{y}" width="{w}" height="{h}"{class_str}/>')
 
     @staticmethod
-    def _draw_text(x: float, y: float, text: str, small: bool = False, title: bool = False) -> None:
-        anchor = "middle" if not title else "left"
-        print(f'<text text-anchor="{anchor}" dominant-baseline="middle" x="{x}" y="{y}"', end='')
-        if small:
-            print(' font-size="80%"', end='')
-        if title:
-            print(' font-weight="bold"', end='')
-        print(f'>{escape(text)}</text>')
+    def _draw_text(x: float, y: float, text: str, cls: Optional[str] = None) -> None:
+        class_str = f' class="{cls}"' if cls is not None else ""
+        print(f'<text x="{x}" y="{y}"{class_str}>{escape(text)}</text>')
 
     def print_key(self, x: float, y: float, key: Key, width: int = 1) -> None:
         tap_words = key.tap.split()
@@ -202,7 +212,7 @@ class Keymap:
             y_tap += LINE_SPACING
         if key.hold:
             y_hold = y + KEYSPACE_H - LINE_SPACING / 2
-            self._draw_text(x_pos, y_hold, key.hold, small=True)
+            self._draw_text(x_pos, y_hold, key.hold, cls="small")
 
     def print_combo(self, x: float, y: float, combo_spec: ComboSpec) -> None:
         pos_idx = combo_spec.positions
@@ -215,7 +225,7 @@ class Keymap:
         x_mid, y_mid = sum(x_pos) / len(pos_idx), sum(y_pos) / len(pos_idx)
 
         self._draw_rect(x_mid + INNER_PAD_W + KEY_W / 4, y_mid + INNER_PAD_H + KEY_H / 4, KEY_W / 2, KEY_H / 2, "combo")
-        self._draw_text(x_mid + KEYSPACE_W / 2, y_mid + INNER_PAD_H + KEY_H / 2, combo_spec.key.tap, small=True)
+        self._draw_text(x_mid + KEYSPACE_W / 2, y_mid + INNER_PAD_H + KEY_H / 2, combo_spec.key.tap, cls="small")
 
     def print_row(self, x: float, y: float, row: KeyRow) -> None:
         prev_key, width = None, 0
@@ -235,7 +245,7 @@ class Keymap:
             y += KEYSPACE_H
 
     def print_layer(self, x: float, y: float, name: str, layer: Layer) -> None:
-        self._draw_text(KEY_W / 2, y - KEY_H / 2, f"{name}:", title=True)
+        self._draw_text(KEY_W / 2, y - KEY_H / 2, f"{name}:", cls="label")
         self.print_block(x, y, layer.left)
         if layer.right:
             self.print_block(
