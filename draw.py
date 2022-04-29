@@ -78,7 +78,7 @@ class Key(BaseModel):
 class ComboSpec(BaseModel):
     positions: Sequence[int]
     key: Key
-    layers: Optional[Sequence[str]] = None
+    layers: Sequence[str] = []
 
     @validator("key", pre=True)
     def get_key(cls, val):
@@ -91,33 +91,34 @@ KeyBlock = Sequence[KeyRow]
 
 class Layer(BaseModel):
     left: KeyBlock = Field(..., alias="keys")
-    right: Optional[KeyBlock] = None
-    left_thumbs: Optional[KeyRow] = None
-    right_thumbs: Optional[KeyRow] = None
-    combos: Optional[Sequence[ComboSpec]] = None
+    right: KeyBlock = []
+    left_thumbs: KeyRow = []
+    right_thumbs: KeyRow = []
+    combos: Sequence[ComboSpec] = []
 
     class Config:
         allow_population_by_field_name = True
 
     @validator("left", "right", pre=True)
     def parse_key_block(cls, vals):
-        return [cls.parse_key_row(row) for row in vals] if vals is not None else vals
+        return [cls.parse_key_row(row) for row in vals]
 
     @validator("left_thumbs", "right_thumbs", pre=True)
     def parse_key_row(cls, vals):
-        return [Key.from_key_spec(val) for val in vals] if vals is not None else None
+        return [Key.from_key_spec(val) for val in vals]
 
 
 class Layout(BaseModel):
     split: bool = True
     rows: int
     columns: int
-    thumbs: Optional[int] = None
+    thumbs: int = 0
 
     @root_validator
     def check_thumbs(cls, vals):
         if vals["thumbs"]:
             assert vals["thumbs"] <= vals["columns"], "Number of thumbs should not be greater than columns"
+            assert vals["split"], "Cannot process non-split keyboard with thumb keys"
         return vals
 
     @property
@@ -146,51 +147,41 @@ class Layout(BaseModel):
 class KeymapData(BaseModel):
     layout: Layout
     layers: Mapping[str, Layer]
-    combos: Optional[Sequence[ComboSpec]] = None
+    combos: Sequence[ComboSpec] = []
 
     @root_validator(skip_on_failure=True)
     def assign_combos_to_layers(cls, vals):
-        if vals["combos"]:
-            for combo in vals["combos"]:
-                layers = combo.layers if combo.layers is not None else vals["layers"]
-                for layer in layers:
-                    if not vals["layers"][layer].combos:
-                        vals["layers"][layer].combos = [combo]
-                    else:
-                        vals["layers"][layer].combos.append(combo)
+        for combo in vals["combos"]:
+            for layer in combo.layers if combo.layers else vals["layers"]:
+                vals["layers"][layer].combos.append(combo)
         return vals
 
     @root_validator(skip_on_failure=True)
     def validate_split(cls, vals):
         if not vals["layout"].split:
-            if any(
-                layer.right is not None or layer.left_thumbs is not None or layer.right_thumbs is not None
-                for layer in vals["layers"].values()
-            ):
+            if any(layer.right or layer.left_thumbs or layer.right_thumbs for layer in vals["layers"].values()):
                 raise ValueError("Cannot have right or thumb blocks for non-split layouts")
         return vals
 
     @root_validator(skip_on_failure=True)
     def check_combo_pos(cls, vals):
         for layer in vals["layers"].values():
-            if layer.combos:
-                for combo in layer.combos:
-                    assert len(combo.positions) == 2, "Cannot have more than two positions for combo"
-                    assert all(pos < vals["layout"].total_keys for pos in combo.positions), \
-                        "Combo positions exceed number of keys"
+            for combo in layer.combos:
+                assert len(combo.positions) == 2, "Cannot have more than two positions for combo"
+                assert all(pos < vals["layout"].total_keys for pos in combo.positions), \
+                    "Combo positions exceed number of keys"
         return vals
 
     @root_validator(skip_on_failure=True)
     def check_dimensions(cls, vals):
         nrows, ncols, nthumbs = vals["layout"].rows, vals["layout"].columns, vals["layout"].thumbs
         for name, layer in vals["layers"].items():
-            assert len(layer.left) == nrows and (layer.right is None or len(layer.right) == nrows), \
+            assert len(layer.left) == nrows and (not layer.right or len(layer.right) == nrows), \
                 f"Number of rows do not match layout specification in layer {name}"
-            for row in chain(layer.left, layer.right) if layer.right else layer.left:
+            for row in chain(layer.left, layer.right):
                 assert len(row) == ncols, f"Number of columns do not match layout specification in layer {name}"
-            if nthumbs:
-                assert len(layer.left_thumbs) == nthumbs and len(layer.right_thumbs) == nthumbs, \
-                    f"Number of thumb keys do not match layout specification in layer {name}"
+            assert len(layer.left_thumbs) == len(layer.right_thumbs) == nthumbs, \
+                f"Number of thumb keys do not match layout specification in layer {name}"
         return vals
 
 
