@@ -52,6 +52,9 @@ STYLE = """
     .label {
         font-weight: bold;
         text-anchor: start;
+        stroke: white;
+        stroke-width: 2;
+        paint-order: stroke;
     }
 
     .small {
