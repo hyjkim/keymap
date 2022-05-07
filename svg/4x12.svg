@@ -197,11 +197,13 @@
 <rect rx="6" ry="6" x="383.5" y="426" width="55" height="50"/>
 <text x="411.0" y="451.0">F12</text>
 <rect rx="6" ry="6" x="442.5" y="426" width="55" height="50"/>
-<text x="470.0" y="442.0">ISO</text>
-<text x="470.0" y="460.0">~</text>
+<text x="470.0" y="451.0">
+<tspan x="470.0" dy="-0.6em">ISO</tspan><tspan x="470.0" dy="1.2em">~</tspan>
+</text>
 <rect rx="6" ry="6" x="501.5" y="426" width="55" height="50"/>
-<text x="529.0" y="442.0">ISO</text>
-<text x="529.0" y="460.0">|</text>
+<text x="529.0" y="451.0">
+<tspan x="529.0" dy="-0.6em">ISO</tspan><tspan x="529.0" dy="1.2em">|</tspan>
+</text>
 <rect rx="6" ry="6" x="560.5" y="426" width="55" height="50"/>
 <text x="588.0" y="451.0">Home</text>
 <rect rx="6" ry="6" x="619.5" y="426" width="55" height="50"/>
@@ -285,17 +287,21 @@
 <rect rx="6" ry="6" x="383.5" y="692" width="55" height="50"/>
 <text x="411.0" y="717.0">F12</text>
 <rect rx="6" ry="6" x="442.5" y="692" width="55" height="50"/>
-<text x="470.0" y="708.0">ISO</text>
-<text x="470.0" y="726.0">#</text>
+<text x="470.0" y="717.0">
+<tspan x="470.0" dy="-0.6em">ISO</tspan><tspan x="470.0" dy="1.2em">#</tspan>
+</text>
 <rect rx="6" ry="6" x="501.5" y="692" width="55" height="50"/>
-<text x="529.0" y="708.0">ISO</text>
-<text x="529.0" y="726.0">/</text>
+<text x="529.0" y="717.0">
+<tspan x="529.0" dy="-0.6em">ISO</tspan><tspan x="529.0" dy="1.2em">/</tspan>
+</text>
 <rect rx="6" ry="6" x="560.5" y="692" width="55" height="50"/>
-<text x="588.0" y="708.0">Pg</text>
-<text x="588.0" y="726.0">Up</text>
+<text x="588.0" y="717.0">
+<tspan x="588.0" dy="-0.6em">Pg</tspan><tspan x="588.0" dy="1.2em">Up</tspan>
+</text>
 <rect rx="6" ry="6" x="619.5" y="692" width="55" height="50"/>
-<text x="647.0" y="708.0">Pg</text>
-<text x="647.0" y="726.0">Dn</text>
+<text x="647.0" y="717.0">
+<tspan x="647.0" dy="-0.6em">Pg</tspan><tspan x="647.0" dy="1.2em">Dn</tspan>
+</text>
 <rect rx="6" ry="6" x="678.5" y="692" width="55" height="50"/>
 <rect rx="6" ry="6" x="29.5" y="746" width="55" height="50"/>
 <rect rx="6" ry="6" x="88.5" y="746" width="55" height="50"/>

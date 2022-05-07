@@ -206,21 +206,23 @@ class Keymap:
     @staticmethod
     def _draw_text(x: float, y: float, text: str, cls: Optional[str] = None) -> None:
         class_str = f' class="{cls}"' if cls is not None else ""
-        print(f'<text x="{x}" y="{y}"{class_str}>{escape(text)}</text>')
+        words = text.split()
+        if not words:
+            return
+        if len(words) == 1:
+            print(f'<text x="{x}" y="{y}"{class_str}>{escape(words[0])}</text>')
+            return
+        print(f'<text x="{x}" y="{y}"{class_str}>')
+        print(f'<tspan x="{x}" dy="-{(len(words) - 1) * 0.6}em">{escape(words[0])}</tspan>', end="")
+        for word in words[1:]:
+            print(f'<tspan x="{x}" dy="1.2em">{escape(word)}</tspan>')
+        print('</text>')
 
     def print_key(self, x: float, y: float, key: Key, width: int = 1) -> None:
-        tap_words = key.tap.split()
         key_width = (width * KEY_W) + 2 * (width - 1) * INNER_PAD_W
         self._draw_rect(x + INNER_PAD_W, y + INNER_PAD_H, key_width, KEY_H, key.type)
-
-        x_pos = x + INNER_PAD_W + key_width / 2
-        y_tap = y + (KEYSPACE_H - (len(tap_words) - 1) * LINE_SPACING) / 2
-        for word in tap_words:
-            self._draw_text(x_pos, y_tap, word)
-            y_tap += LINE_SPACING
-        if key.hold:
-            y_hold = y + KEYSPACE_H - LINE_SPACING / 2
-            self._draw_text(x_pos, y_hold, key.hold, cls="small")
+        self._draw_text(x + INNER_PAD_W + key_width / 2, y + KEYSPACE_H / 2, key.tap)
+        self._draw_text(x + INNER_PAD_W + key_width / 2, y + KEYSPACE_H - LINE_SPACING / 2, key.hold, cls="small")
 
     def print_combo(self, x: float, y: float, combo_spec: ComboSpec) -> None:
         pos_idx = combo_spec.positions
