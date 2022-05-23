@@ -2,7 +2,7 @@ layout:
     split: true
     rows: 3
     columns: 5
-    thumbs: 2
+    thumbs: 3
 layers:
     DEF:
         left:
@@ -14,6 +14,9 @@ layers:
             - [H, {hold: Shift, tap: J}, {hold: Alt, tap: K}, {hold: Gui, tap: L}, {hold: Ctrl, tap: "'"}]
             - [N, M, ",", ., /]
         left_thumbs: &left_thumbs
+            - hold: Gui
+              tap: Tab
+              type: ghost
             - hold: Ctrl
               tap: Esc
             - hold: NAV
@@ -23,6 +26,9 @@ layers:
               tap: Space
             - hold: Shift
               tap: Enter
+            - hold: Alt
+              tap: Delete
+              type: ghost
         combos: &combos
             - positions: [0, 1]
               key: "`"
@@ -48,11 +54,16 @@ layers:
             - ["0", "4", "5", "6", "."]
             - [";", "1", "2", "3", "/"]
         left_thumbs:
+            - tap: Gui
+              type: ghost
             - Space
             - FUN
         right_thumbs:
-            - {tap: "", type: held}
+            - tap: ""
+              type: held
             - Shift
+            - tap: Alt
+              type: ghost
     NAV:
         left:
             - ["Win Close", "Tab Prev", "Tab Next", "Tab Close", "Vol Up"]
@@ -63,11 +74,16 @@ layers:
             - [Left, Down, Up, Right, Calc]
             - [Insert, Delete, Prev, Next, null]
         left_thumbs:
+            - tap: Gui
+              type: ghost
             - Ctrl
-            - {tap: "", type: held}
+            - tap: ""
+              type: held
         right_thumbs:
             - FUN
             - Shift
+            - tap: Alt
+              type: ghost
     FUN:
         left:
             - [F1, F2, F3, F4, F5]
@@ -78,8 +94,14 @@ layers:
             - [BT1, BT2, BT3, BT4, BT5]
             - ["Out USB", "Out BLE", "Print Scrn", "Pause Break", "BT CLR"]
         left_thumbs:
+            - tap: Boot
+              type: ghost
             - Reset
-            - {tap: "", type: held}
+            - tap: ""
+              type: held
         right_thumbs:
-            - {tap: "", type: held}
+            - tap: ""
+              type: held
             - Reset
+            - tap: Boot
+              type: ghost

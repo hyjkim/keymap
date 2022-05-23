@@ -17,13 +17,15 @@ Requires `python >= 3.8`, `pyyaml` and `pydantic` packages (`pip install --user 
 - Slightly different styling
 
 ## Split layout example
+3x5 layout with 2 or 3 thumb keys on each side:
 ```sh
-python draw.py keymaps/3x5+2.yaml >svg/3x5+2.svg
+python draw.py keymaps/3x5.yaml >svg/3x5.svg
 ```
 
-![Example 3x5+2 layout](svg/3x5+2.svg)
+![Example 3x5 layout](svg/3x5.svg)
 
 ## Non-split layout example
+4x12 ortho layout à la Planck with MIT layout:
 ```sh
 python draw.py keymaps/4x12.yaml >svg/4x12.svg
 ```

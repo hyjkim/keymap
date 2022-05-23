@@ -44,6 +44,10 @@ STYLE = """
         fill: #cdf;
     }
 
+    .ghost {
+        fill: #ddd;
+    }
+
     text {
         text-anchor: middle;
         dominant-baseline: middle;
@@ -66,7 +70,7 @@ STYLE = """
 class Key(BaseModel):
     tap: str
     hold: str = ""
-    type: Literal[None, "held", "combo"] = None
+    type: Literal[None, "held", "combo", "ghost"] = None
 
     @classmethod
     def from_key_spec(cls, key_spec: Union[str, "Key"]) -> "Key":
