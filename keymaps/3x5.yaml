@@ -30,7 +30,7 @@ layers:
               tap: Delete
               type: ghost
         combos: &combos
-            - positions: [0, 1]
+            - positions: [22, 23]
               key: "`"
             - positions: [6, 7]
               key: ";"
@@ -42,13 +42,13 @@ layers:
               key: "["
             - positions: [17, 18]
               key: "]"
-            - positions: [18, 19]
+            - positions: [26, 27]
               key: "\\"
     SYM:
         left:
             - ["!", "@", "#", "$", "%"]
             - ["+", "=", "_", "-", "^"]
-            - [null, "¿", "\\", "*", "&"]
+            - [null, null, "¿", "*", "&"]
         right:
             - ["\\", "7", "8", "9", ","]
             - ["0", "4", "5", "6", "."]
@@ -57,7 +57,8 @@ layers:
             - tap: Gui
               type: ghost
             - Space
-            - FUN
+            - tap: Bspace
+              hold: FUN
         right_thumbs:
             - tap: ""
               type: held
@@ -80,7 +81,8 @@ layers:
             - tap: ""
               type: held
         right_thumbs:
-            - FUN
+            - tap: Space
+              hold: FUN
             - Shift
             - tap: Alt
               type: ghost
